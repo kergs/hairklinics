@@ -1,0 +1,194 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hair Klinics — Precision Cuts, Nottingham</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --charcoal-950:#14120F; --charcoal-900:#1B1815; --charcoal-800:#211E1A;
+  --charcoal-700:#2E2A24; --charcoal-600:#3A352E;
+  --steel-400:#8B8578; --steel-300:#A9A296;
+  --gold-500:#C9A227; --gold-400:#D9B948; --gold-300:#E8C766;
+  --ivory:#F2EEE3;
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--charcoal-950); color:var(--ivory); font-family:'Inter',sans-serif;}
+.font-display{font-family:'Oswald',sans-serif;}
+.font-mono{font-family:'JetBrains Mono',monospace;}
+.nav-link{position:relative;}
+.nav-link::after{content:''; position:absolute; left:0; bottom:-4px; width:0; height:1px; background:var(--gold-400); transition:width .25s ease;}
+.nav-link:hover::after{width:100%;}
+.glow-hover{transition:box-shadow .3s ease, transform .3s ease;}
+.glow-hover:hover{box-shadow:0 0 0 1px rgba(201,162,39,0.5), 0 0 24px rgba(201,162,39,0.25); transform:translateY(-2px);}
+a:focus-visible, button:focus-visible{outline:2px solid var(--gold-300); outline-offset:3px;}
+.hero-glow{background:
+  radial-gradient(ellipse 60% 50% at 50% 0%, rgba(201,162,39,0.16), transparent 60%),
+  radial-gradient(ellipse 40% 40% at 85% 20%, rgba(201,162,39,0.08), transparent 60%);}
+.reveal{opacity:0; transform:translateY(18px); transition:opacity .7s ease, transform .7s ease;}
+.reveal.in{opacity:1; transform:translateY(0);}
+.price-row{border-bottom:1px dashed var(--charcoal-600);}
+.price-row:nth-last-child(-n+2){border-bottom:none;}
+.ticker-track{display:flex; width:max-content; animation:ticker 28s linear infinite;}
+@keyframes ticker{from{transform:translateX(0);} to{transform:translateX(-50%);}}
+@media (prefers-reduced-motion: reduce){.reveal{opacity:1; transform:none; transition:none;} .ticker-track{animation:none;}}
+.slide{position:absolute; inset:0; opacity:0; transition:opacity 1s ease;}
+.slide.active{opacity:1;}
+.slide-dot{width:6px; height:6px; border-radius:999px; background:var(--charcoal-600); transition:background .3s ease, width .3s ease;}
+.slide-dot.active{background:var(--gold-400); width:18px;}
+.forge-line{height:2px; width:100%; background:linear-gradient(90deg, transparent, var(--gold-500) 20%, var(--gold-300) 50%, var(--gold-500) 80%, transparent); box-shadow:0 0 8px 0 rgba(201,162,39,0.4);}
+.service-row{cursor:pointer; transition:background .2s ease;}
+.service-row:hover{background:rgba(201,162,39,0.05);}
+.cat-tab{cursor:pointer; transition:color .2s ease, border-color .2s ease;}
+.cat-tab.active{color:var(--gold-400); border-color:var(--gold-400);}
+#modalOverlay{position:fixed; inset:0; z-index:50; background:rgba(0,0,0,0.7); opacity:0; pointer-events:none; transition:opacity .25s ease; display:flex; align-items:center; justify-content:center; padding:1.25rem;}
+#modalOverlay.open{opacity:1; pointer-events:auto;}
+#modalPanel{transform:translateY(12px); opacity:0; transition:transform .25s ease, opacity .25s ease;}
+#modalOverlay.open #modalPanel{transform:translateY(0); opacity:1;}
+</style>
+</head>
+<body class="antialiased">
+
+<header class="fixed top-0 inset-x-0 z-40 backdrop-blur-md bg-[var(--charcoal-950)]/80 border-b border-[var(--charcoal-700)]">
+  <div class="max-w-6xl mx-auto px-5 sm:px-8 h-16 flex items-center justify-between">
+    <a href="#top" class="font-display text-lg tracking-wide">HAIR <span class="text-[var(--gold-400)]">KLINICS</span></a>
+    <nav class="hidden md:flex items-center gap-8 text-sm text-[var(--steel-300)] font-medium">
+      <a href="{% url 'services' %}" class="nav-link hover:text-[var(--ivory)]">SERVICES</a>
+      <a href="{% url 'gallery' %}" class="nav-link hover:text-[var(--ivory)]">GALLERY</a>
+      <a href="{% url 'contact' %}" class="nav-link hover:text-[var(--ivory)]">CONTACT</a>
+    </nav>
+    <a href="{% url 'services' %}" class="hidden sm:inline-flex items-center gap-2 bg-[var(--gold-500)] text-[var(--charcoal-950)] font-semibold text-sm px-4 py-2 rounded-sm glow-hover">Book a chair</a>
+  </div>
+</header>
+
+<section id="top" class="hero-glow pt-40 pb-24 px-5 sm:px-8 border-b border-[var(--charcoal-700)]">
+  <div class="max-w-6xl mx-auto grid md:grid-cols-[1.1fr_1fr] gap-12 items-center">
+    <div class="reveal">
+      <p class="font-mono text-xs tracking-[0.25em] text-[var(--gold-400)] uppercase mb-5">Mansfield Road, Nottingham Est. 2025</p>
+      <h1 class="font-display text-[13vw] sm:text-6xl md:text-7xl leading-[0.95] uppercase tracking-tight">Precision,<br><span class="text-[var(--gold-400)]">forged</span> by hand.</h1>
+      <p class="mt-6 text-[var(--steel-300)] text-base sm:text-lg max-w-md leading-relaxed">No shortcuts, no rush jobs. Every fade, line-up and shave is worked like a craft — because that's exactly what it is.</p>
+      <div class="mt-8 flex flex-wrap gap-4">
+        <a href="{% url 'services' %}" class="bg-[var(--gold-500)] text-[var(--charcoal-950)] font-semibold px-6 py-3 rounded-sm glow-hover">Book your slot</a>
+        <a href="{% url 'services' %}" class="border border-[var(--charcoal-600)] text-[var(--ivory)] px-6 py-3 rounded-sm hover:border-[var(--gold-500)] transition-colors">See the menu</a>
+      </div>
+    </div>
+    <div class="reveal aspect-[4/5] rounded-sm border border-[var(--charcoal-700)] relative overflow-hidden">
+      <div class="slide active"><img src="{% static 'images/hero/slide-1-skin-fade.jpg' %}" alt="Skin fade haircut" class="w-full h-full object-cover"></div>
+      <div class="slide"><img src="{% static 'images/hero/slide-2-beard-sculpt.jpg' %}" alt="Beard sculpting service" class="w-full h-full object-cover"></div>
+      <div class="slide"><img src="{% static 'images/hero/slide-3-hot-towel.jpg' %}" alt="Hot towel shave service" class="w-full h-full object-cover"></div>
+      <div id="slideDots" class="absolute bottom-4 inset-x-0 flex justify-center gap-2"></div>
+    </div>
+  </div>
+</section>
+
+<div class="border-b border-[var(--charcoal-700)] bg-[var(--charcoal-900)] py-3 overflow-hidden">
+  <div class="ticker-track font-display text-sm uppercase tracking-[0.3em] text-[var(--steel-400)]">
+    {% for c in categories %}
+      <span class="mx-6">{{ c.name }}</span><span class="text-[var(--gold-500)]" aria-hidden="true">✦</span>
+    {% endfor %}
+    {% for c in categories %}
+      <span class="mx-6">{{ c.name }}</span><span class="text-[var(--gold-500)]" aria-hidden="true">✦</span>
+    {% endfor %}
+  </div>
+</div>
+
+
+<div id="modalOverlay" role="dialog" aria-modal="true" aria-labelledby="modalName">
+  <div id="modalPanel" class="w-full max-w-md bg-[var(--charcoal-900)] border border-[var(--charcoal-700)] rounded-sm p-6 relative">
+    <button id="modalClose" aria-label="Close" class="absolute top-4 right-4 text-[var(--steel-400)] hover:text-[var(--ivory)]">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round"/></svg>
+    </button>
+    <p id="modalName" class="font-display text-2xl uppercase pr-8"></p>
+    <p id="modalPrice" class="font-mono text-[var(--gold-300)] mt-1"></p>
+    <p id="modalDetail" class="text-sm text-[var(--steel-300)] mt-4 leading-relaxed"></p>
+    <div class="forge-line my-5"></div>
+    <p class="font-mono text-xs text-[var(--gold-400)] uppercase tracking-widest mb-2">Pay by transfer</p>
+    <div class="text-sm space-y-1 mb-6">
+      <p><span class="text-[var(--steel-400)]">Bank:</span> [Your Bank Name]</p>
+      <p><span class="text-[var(--steel-400)]">Account name:</span> Hair Klinics</p>
+      <p><span class="text-[var(--steel-400)]">Account number:</span> <span class="font-mono">0000000000</span></p>
+    </div>
+    <a id="modalWhatsapp" href="#" target="_blank" rel="noopener" class="flex items-center justify-center gap-2 bg-[var(--gold-500)] text-[var(--charcoal-950)] font-semibold py-3 rounded-sm glow-hover">Continue booking on WhatsApp</a>
+    <a id="modalEmail" href="mailto:hairklinics@gmail.com" class="flex items-center justify-center gap-2 border border-[var(--charcoal-600)] text-[var(--ivory)] py-3 rounded-sm mt-3 hover:border-[var(--gold-500)] transition-colors">Or book by email</a>
+  </div>
+</div>
+
+<footer class="border-t border-[var(--charcoal-700)] px-5 sm:px-8 py-10">
+  <div class="max-w-6xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-6">
+    <p class="font-mono text-xs text-[var(--steel-400)] uppercase tracking-wider">© 2026 Hair Klinics. Mansfield Road, Nottingham</p>
+    <div class="flex items-center gap-5">
+      <a href="https://instagram.com/hairklinics" target="_blank" rel="noopener" aria-label="Instagram" class="text-[var(--steel-400)] hover:text-[var(--gold-400)] transition-colors">IG</a>
+      <a href="mailto:hairklinics@gmail.com" aria-label="Email" class="text-[var(--steel-400)] hover:text-[var(--gold-400)] transition-colors">Email</a>
+    </div>
+    <a href="#top" class="font-mono text-xs text-[var(--steel-400)] hover:text-[var(--gold-400)] transition-colors">Back to top ↑</a>
+  </div>
+</footer>
+
+<script>
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+}, { threshold: 0.15 });
+document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+const slides = document.querySelectorAll('.slide');
+const dotsWrap = document.getElementById('slideDots');
+let current = 0;
+slides.forEach((_, i) => {
+  const dot = document.createElement('button');
+  dot.className = 'slide-dot' + (i === 0 ? ' active' : '');
+  dot.addEventListener('click', () => goToSlide(i));
+  dotsWrap.appendChild(dot);
+});
+const dots = dotsWrap.querySelectorAll('.slide-dot');
+function goToSlide(index) {
+  slides[current].classList.remove('active');
+  dots[current].classList.remove('active');
+  current = index;
+  slides[current].classList.add('active');
+  dots[current].classList.add('active');
+}
+if (slides.length > 1) setInterval(() => goToSlide((current + 1) % slides.length), 4000);
+
+const WHATSAPP_NUMBER = "+447349570305";
+const overlay = document.getElementById('modalOverlay');
+const modalName = document.getElementById('modalName');
+const modalPrice = document.getElementById('modalPrice');
+const modalDetail = document.getElementById('modalDetail');
+const modalWhatsapp = document.getElementById('modalWhatsapp');
+const modalEmail = document.getElementById('modalEmail');
+const modalClose = document.getElementById('modalClose');
+const BOOKING_EMAIL = "hairklinics@gmail.com";
+let lastFocusedElement = null;
+
+function openModal(row) {
+  const { name, price, detail } = row.dataset;
+  modalName.textContent = name;
+  modalPrice.textContent = price;
+  modalDetail.textContent = detail;
+  const message = `Hi Hair Klinics, I'd like to book: ${name} (${price}).`;
+  modalWhatsapp.href = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+  const subject = `Booking request: ${name}`;
+  const body = `Hi Hair Klinics,\n\nI'd like to book: ${name} (${price}).\n\nPreferred day/time: `;
+  modalEmail.href = `mailto:${BOOKING_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  lastFocusedElement = row;
+  overlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  modalClose.focus();
+}
+function closeModal() {
+  overlay.classList.remove('open');
+  document.body.style.overflow = '';
+  if (lastFocusedElement) lastFocusedElement.focus();
+}
+document.querySelectorAll('.service-row').forEach(row => row.addEventListener('click', () => openModal(row)));
+modalClose.addEventListener('click', closeModal);
+overlay.addEventListener('click', (e) => { if (e.target === overlay) closeModal(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+</script>
+</body>
+</html>

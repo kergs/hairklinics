@@ -1,0 +1,265 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Services & Booking — Hair Klinics{% endblock %}
+
+{% block extra_head %}
+<style>
+.price-row{border-bottom:1px dashed var(--charcoal-600);}
+.price-row:nth-last-child(-n+2){border-bottom:none;}
+.service-row{cursor:pointer; transition:background .2s ease;}
+.service-row:hover{background:rgba(201,162,39,0.05);}
+.cat-tab{cursor:pointer; transition:color .2s ease, border-color .2s ease;}
+.cat-tab.active{color:var(--gold-400); border-color:var(--gold-400);}
+.forge-line{height:2px; width:100%; background:linear-gradient(90deg, transparent, var(--gold-500) 20%, var(--gold-300) 50%, var(--gold-500) 80%, transparent); box-shadow:0 0 8px 0 rgba(201,162,39,0.4);}
+#modalOverlay{position:fixed; inset:0; z-index:50; background:rgba(0,0,0,0.7); opacity:0; pointer-events:none; transition:opacity .25s ease; display:flex; align-items:center; justify-content:center; padding:1.25rem;}
+#modalOverlay.open{opacity:1; pointer-events:auto;}
+#modalPanel{transform:translateY(12px); opacity:0; transition:transform .25s ease, opacity .25s ease;}
+#modalOverlay.open #modalPanel{transform:translateY(0); opacity:1;}
+#bookingDate {
+  color-scheme: white;
+}
+#bookingDate::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  cursor: pointer;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+{% csrf_token %}
+<section class="px-5 sm:px-8 py-24 max-w-6xl mx-auto">
+  <div class="mb-10">
+    <p class="font-mono text-xs tracking-[0.25em] text-[var(--gold-400)] uppercase mb-3">The Menu</p>
+    <h1 class="font-display text-4xl sm:text-5xl uppercase">What we work on</h1>
+  </div>
+  <div class="forge-line mb-8"></div>
+
+  <div class="flex flex-wrap gap-x-6 gap-y-2 mb-10 text-sm text-[var(--steel-300)] font-mono uppercase tracking-wide">
+    {% for c in categories %}
+      <a href="#cat-{{ c.slug }}" class="cat-tab border-b border-transparent pb-1{% if forloop.first %} active{% endif %}">{{ c.name }}</a>
+    {% endfor %}
+  </div>
+
+  {% for c in categories %}
+    <div id="cat-{{ c.slug }}" class="mb-14">
+      <h2 class="font-display text-2xl uppercase mb-4 text-[var(--gold-300)]">{{ c.name }}</h2>
+      <div class="grid md:grid-cols-2 gap-x-16">
+        {% for s in c.services.all %}
+         <button type="button" class="service-row w-full text-left price-row flex justify-between gap-6 py-5"
+          data-id="{{ s.id }}"
+          data-name="{{ s.name }}"
+          data-price="£{{ s.price }}{% if s.price_note %} ({{ s.price_note }}){% endif %}"
+          data-detail="{{ s.description }}"
+          data-duration="{{ s.duration_minutes }}"
+          {% if barber %}data-barber-id="{{ barber.id }}"{% endif %}>
+            <div>
+              <p class="font-display uppercase tracking-wide">{{ s.name }}</p>
+              {% if s.price_note %}<p class="text-sm text-[var(--steel-300)] mt-1">{{ s.price_note }}</p>{% endif %}
+            </div>
+            <span class="font-mono text-[var(--gold-300)] whitespace-nowrap">£{{ s.price }}</span>
+          </button>
+        {% endfor %}
+      </div>
+    </div>
+  {% endfor %}
+</section>
+
+ <div id="modalOverlay" role="dialog" aria-modal="true" aria-labelledby="modalName">
+    <div id="modalPanel" class="w-full max-w-md bg-[var(--charcoal-900)] border border-[var(--charcoal-700)] rounded-sm p-6 relative">
+      <button id="modalClose" aria-label="Close" class="absolute top-4 right-4 text-[var(--steel-400)] hover:text-[var(--ivory)]">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round"/></svg>
+      </button>
+  
+      <p id="modalName" class="font-display text-2xl uppercase pr-8"></p>
+      <p id="modalPrice" class="font-mono text-[var(--gold-300)] mt-1"></p>
+  
+      <div id="stepDate" class="mt-6">
+        <p class="font-mono text-xs text-[var(--gold-400)] uppercase tracking-widest mb-2">Pick a date</p>
+        <input type="date" id="bookingDate" class="w-full bg-[var(--charcoal-800)] border border-[var(--charcoal-600)] rounded-sm px-3 py-2 text-[var(--ivory)]">
+        <button id="checkSlotsBtn" class="w-full mt-4 bg-[var(--gold-500)] text-[var(--charcoal-950)] font-semibold py-3 rounded-sm glow-hover">Check available times</button>
+      </div>
+  
+      <div id="stepSlots" class="mt-6 hidden">
+        <p class="font-mono text-xs text-[var(--gold-400)] uppercase tracking-widest mb-2">Pick a time</p>
+        <div id="slotsGrid" class="grid grid-cols-3 gap-2"></div>
+        <p id="noSlotsMsg" class="text-sm text-[var(--steel-300)] hidden">No free slots that day — try another date.</p>
+        <button id="backToDateBtn" class="text-sm text-[var(--steel-400)] hover:text-[var(--gold-400)] mt-4">← Choose a different date</button>
+      </div>
+  
+      <div id="stepDetails" class="mt-6 hidden">
+        <p class="font-mono text-xs text-[var(--gold-400)] uppercase tracking-widest mb-2">Your details</p>
+        <p id="chosenSlotSummary" class="text-sm text-[var(--steel-300)] mb-3"></p>
+        <input type="text" id="custName" placeholder="Full name" class="w-full bg-[var(--charcoal-800)] border border-[var(--charcoal-600)] rounded-sm px-3 py-2 text-[var(--ivory)] mb-2">
+        <input type="email" id="custEmail" placeholder="Email" class="w-full bg-[var(--charcoal-800)] border border-[var(--charcoal-600)] rounded-sm px-3 py-2 text-[var(--ivory)] mb-2">
+        <input type="tel" id="custPhone" placeholder="Phone number" class="w-full bg-[var(--charcoal-800)] border border-[var(--charcoal-600)] rounded-sm px-3 py-2 text-[var(--ivory)] mb-4">
+        <button id="confirmBookingBtn" class="w-full bg-[var(--gold-500)] text-[var(--charcoal-950)] font-semibold py-3 rounded-sm glow-hover">Confirm booking</button>
+        <p id="bookingError" class="text-sm text-red-400 mt-2 hidden"></p>
+      </div>
+  
+      <div id="stepSuccess" class="mt-6 hidden text-center">
+        <p class="font-display text-xl text-[var(--gold-300)] mb-2">Booking confirmed!</p>
+        <p class="text-sm text-[var(--steel-300)] mb-4">We've held your slot. Please complete payment to secure it fully.</p>
+      
+        <div class="text-sm text-left space-y-1 mb-5 bg-[var(--charcoal-800)] border border-[var(--charcoal-700)] rounded-sm p-4">
+          <p><span class="text-[var(--steel-400)]">Bank:</span> [Your Bank Name]</p>
+          <p><span class="text-[var(--steel-400)]">Account name:</span> Hair Klinics</p>
+          <p><span class="text-[var(--steel-400)]">Account number:</span> <span class="font-mono">0000000000</span></p>
+        </div>
+      
+        <a id="paymentProofWhatsapp" href="#" target="_blank" rel="noopener" class="flex items-center justify-center gap-2 bg-[var(--gold-500)] text-[var(--charcoal-950)] font-semibold py-3 rounded-sm glow-hover mb-2">Send proof of payment on WhatsApp</a>
+        <a id="paymentProofEmail" href="#" class="flex items-center justify-center gap-2 border border-[var(--charcoal-600)] text-[var(--ivory)] py-3 rounded-sm hover:border-[var(--gold-500)] transition-colors">Or send by email</a>
+      </div>
+  
+      <div class="forge-line my-5"></div>
+      <p class="font-mono text-xs text-[var(--steel-400)] uppercase tracking-widest mb-2">Prefer to book directly?</p>
+      <a id="modalWhatsapp" href="#" target="_blank" rel="noopener" class="flex items-center justify-center gap-2 border border-[var(--charcoal-600)] text-[var(--ivory)] py-3 rounded-sm mb-2 hover:border-[var(--gold-500)] transition-colors">WhatsApp us</a>
+      <a id="modalEmail" href="mailto:hairklinics@gmail.com" class="flex items-center justify-center gap-2 border border-[var(--charcoal-600)] text-[var(--ivory)] py-3 rounded-sm hover:border-[var(--gold-500)] transition-colors">Or email us</a>
+    </div>
+  </div>
+
+  <script>
+    const WHATSAPP_NUMBER = "+447349570305";
+    const BOOKING_EMAIL = "hairklinics@gmail.com";
+    
+    const overlay = document.getElementById('modalOverlay');
+    const modalName = document.getElementById('modalName');
+    const modalPrice = document.getElementById('modalPrice');
+    const modalClose = document.getElementById('modalClose');
+    const modalWhatsapp = document.getElementById('modalWhatsapp');
+    const modalEmail = document.getElementById('modalEmail');
+    
+    const stepDate = document.getElementById('stepDate');
+    const stepSlots = document.getElementById('stepSlots');
+    const stepDetails = document.getElementById('stepDetails');
+    const stepSuccess = document.getElementById('stepSuccess');
+    
+    const bookingDate = document.getElementById('bookingDate');
+    const checkSlotsBtn = document.getElementById('checkSlotsBtn');
+    const slotsGrid = document.getElementById('slotsGrid');
+    const noSlotsMsg = document.getElementById('noSlotsMsg');
+    const backToDateBtn = document.getElementById('backToDateBtn');
+    
+    const chosenSlotSummary = document.getElementById('chosenSlotSummary');
+    const custName = document.getElementById('custName');
+    const custEmail = document.getElementById('custEmail');
+    const custPhone = document.getElementById('custPhone');
+    const confirmBookingBtn = document.getElementById('confirmBookingBtn');
+    const bookingError = document.getElementById('bookingError');
+
+    function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+      }
+      const csrftoken = getCookie('csrftoken');
+    
+    let currentService = null;   // holds id, name, price, barberId, duration
+    let currentDate = null;
+    let currentSlot = null;      // e.g. "10:00"
+    
+    function showStep(step) {
+      [stepDate, stepSlots, stepDetails, stepSuccess].forEach(s => s.classList.add('hidden'));
+      step.classList.remove('hidden');
+    }
+    
+    function openModal(row) {
+      const { id, name, price, duration, barberId } = row.dataset;
+      currentService = { id, name, price, duration, barberId };
+      modalName.textContent = name;
+      modalPrice.textContent = price;
+    
+      const message = `Hi Hair Klinics, I'd like to book: ${name} (${price}).`;
+      modalWhatsapp.href = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+      const subject = `Booking request: ${name}`;
+      const body = `Hi Hair Klinics,\n\nI'd like to book: ${name} (${price}).\n\nPreferred day/time: `;
+      modalEmail.href = `mailto:${BOOKING_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    
+      bookingDate.value = '';
+      showStep(stepDate);
+      overlay.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+    
+    function closeModal() {
+      overlay.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+    
+    document.querySelectorAll('.service-row').forEach(row => row.addEventListener('click', () => openModal(row)));
+    modalClose.addEventListener('click', closeModal);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) closeModal(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+    
+    // check availability
+    checkSlotsBtn.addEventListener('click', async () => {
+      if (!bookingDate.value) return;
+      currentDate = bookingDate.value;
+    
+      const url = `/api/availability/?barber=${currentService.barberId}&service=${currentService.id}&date=${currentDate}`;
+      const res = await fetch(url);
+      const data = await res.json();
+    
+      slotsGrid.innerHTML = '';
+      if (data.slots.length === 0) {
+        noSlotsMsg.classList.remove('hidden');
+      } else {
+        noSlotsMsg.classList.add('hidden');
+        data.slots.forEach(slot => {
+          const btn = document.createElement('button');
+          btn.textContent = slot;
+          btn.className = 'border border-[var(--charcoal-600)] rounded-sm py-2 text-sm hover:border-[var(--gold-500)] hover:text-[var(--gold-400)] transition-colors';
+          btn.addEventListener('click', () => selectSlot(slot));
+          slotsGrid.appendChild(btn);
+        });
+      }
+      showStep(stepSlots);
+    });
+    
+    backToDateBtn.addEventListener('click', () => showStep(stepDate));
+    
+    // pick a slot
+    function selectSlot(slot) {
+      currentSlot = slot;
+      chosenSlotSummary.textContent = `${currentService.name} on ${currentDate} at ${slot}`;
+      bookingError.classList.add('hidden');
+      showStep(stepDetails);
+    }
+    
+    // submit booking
+    confirmBookingBtn.addEventListener('click', async () => {
+      if (!custName.value || !custEmail.value || !custPhone.value) {
+        bookingError.textContent = 'Please fill in all fields.';
+        bookingError.classList.remove('hidden');
+        return;
+      }
+    
+      const startTime = `${currentDate}T${currentSlot}:00`;
+    
+      const res = await fetch('/api/bookings/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrftoken,
+        },
+        body: JSON.stringify({
+          barber: currentService.barberId,
+          service: currentService.id,
+          customer_name: custName.value,
+          customer_email: custEmail.value,
+          customer_phone: custPhone.value,
+          start_time: startTime,
+        }),
+      });
+    
+      if (res.ok) {
+        const booking = await res.json();
+        const ref = `#${booking.id}`;
+        const paymentMsg = `Hi Hair Klinics, here's my proof of payment for booking ${ref} (${currentService.name}, ${currentDate} at ${currentSlot}).`;
+        document.getElementById('paymentProofWhatsapp').href = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(paymentMsg)}`;
+        document.getElementById('paymentProofEmail').href = `mailto:${BOOKING_EMAIL}?subject=${encodeURIComponent('Payment proof - Booking ' + ref)}&body=${encodeURIComponent(paymentMsg)}`;
+        showStep(stepSuccess);
+      }
+    });
+ </script>
+{% endblock %}

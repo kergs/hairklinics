@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Gallery — Hair Klinics{% endblock %}
+
+{% block content %}
+<section class="px-5 sm:px-8 py-24 max-w-6xl mx-auto">
+  <div class="mb-10">
+    <p class="font-mono text-xs tracking-[0.25em] text-[var(--gold-400)] uppercase mb-3">Our Recent Work</p>
+    <h1 class="font-display text-4xl sm:text-5xl uppercase">From the chair</h1>
+  </div>
+
+  {% if images %}
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+      {% for img in images %}
+        <div class="aspect-square rounded-sm border border-[var(--charcoal-700)] overflow-hidden glow-hover">
+          <img src="{{ img.image.url }}" alt="{{ img.caption|default:'Hair Klinics work' }}" class="w-full h-full object-cover">
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="text-[var(--steel-300)]">No photos added yet — check back soon.</p>
+  {% endif %}
+</section>
+{% endblock %}

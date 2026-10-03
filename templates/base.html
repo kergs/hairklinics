@@ -1,0 +1,71 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}Hair Klinics — Precision Cuts, Nottingham{% endblock %}</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --charcoal-950:#14120F; --charcoal-900:#1B1815;
+  --charcoal-700:#2E2A24; --charcoal-600:#3A352E;
+  --steel-400:#8B8578; --steel-300:#A9A296;
+  --gold-500:#C9A227; --gold-400:#D9B948; --gold-300:#E8C766;
+  --ivory:#F2EEE3;
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--charcoal-950); color:var(--ivory); font-family:'Inter',sans-serif;}
+.font-display{font-family:'Oswald',sans-serif;}
+.font-mono{font-family:'JetBrains Mono',monospace;}
+.nav-link{position:relative;}
+.nav-link::after{content:''; position:absolute; left:0; bottom:-4px; width:0; height:1px; background:var(--gold-400); transition:width .25s ease;}
+.nav-link:hover::after{width:100%;}
+.glow-hover{transition:box-shadow .3s ease, transform .3s ease;}
+.glow-hover:hover{box-shadow:0 0 0 1px rgba(201,162,39,0.5), 0 0 24px rgba(201,162,39,0.25); transform:translateY(-2px);}
+</style>
+{% block extra_head %}{% endblock %}
+</head>
+<body class="antialiased">
+
+<header class="sticky top-0 z-40 backdrop-blur-md bg-[var(--charcoal-950)]/80 border-b border-[var(--charcoal-700)]">
+  <div class="max-w-6xl mx-auto px-5 sm:px-8 h-16 flex items-center justify-between">
+    <a href="{% url 'home' %}" class="font-display text-lg tracking-wide">HAIR <span class="text-[var(--gold-400)]">KLINICS</span></a>
+    <nav class="hidden md:flex items-center gap-8 text-sm text-[var(--steel-300)] font-medium">
+      <a href="{% url 'services' %}" class="nav-link hover:text-[var(--ivory)]">SERVICES</a>
+      <a href="{% url 'gallery' %}" class="nav-link hover:text-[var(--ivory)]">GALLERY</a>
+      <a href="{% url 'contact' %}" class="nav-link hover:text-[var(--ivory)]">CONTACT</a>
+    </nav>
+    <a href="{% url 'services' %}" class="hidden sm:inline-flex items-center gap-2 bg-[var(--gold-500)] text-[var(--charcoal-950)] font-semibold text-sm px-4 py-2 rounded-sm glow-hover">Book a chair</a>
+  </div>
+</header>
+
+<main>
+  {% block content %}{% endblock %}
+</main>
+
+<footer class="border-t border-[var(--charcoal-700)] px-5 sm:px-8 py-10">
+  <div class="max-w-6xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-6">
+    <p class="font-mono text-xs text-[var(--steel-400)] uppercase tracking-wider">© {% now "Y" %} Hair Klinics. Mansfield Road, Nottingham</p>
+    <div class="flex items-center gap-5">
+      <a href="https://instagram.com/hairklinics" target="_blank" rel="noopener" aria-label="Instagram" class="text-[var(--steel-400)] hover:text-[var(--gold-400)] transition-colors">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+      </a>
+      <a href="https://facebook.com/hairklinics" target="_blank" rel="noopener" aria-label="Facebook" class="text-[var(--steel-400)] hover:text-[var(--gold-400)] transition-colors">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 9h2V6h-2a3 3 0 0 0-3 3v2H9v3h2v6h3v-6h2.2l.8-3H14V9z"/></svg>
+      </a>
+      <a href="https://tiktok.com/@hairklinics" target="_blank" rel="noopener" aria-label="TikTok" class="text-[var(--steel-400)] hover:text-[var(--gold-400)] transition-colors">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 4c.3 2 1.8 3.4 4 3.7v2.6c-1.5 0-2.9-.4-4-1.2v6a5 5 0 1 1-5-5c.3 0 .7 0 1 .1V12a2.5 2.5 0 1 0 1.5 2.3V4h2.5z"/></svg>
+      </a>
+      <a href="mailto:hairklinics@gmail.com" aria-label="Email" class="text-[var(--steel-400)] hover:text-[var(--gold-400)] transition-colors">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
+      </a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

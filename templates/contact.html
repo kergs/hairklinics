@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Contact — Hair Klinics{% endblock %}
+
+{% block content %}
+<section class="px-5 sm:px-8 py-24 max-w-6xl mx-auto">
+  <div class="mb-12">
+    <p class="font-mono text-xs tracking-[0.25em] text-[var(--gold-400)] uppercase mb-3">Get In Touch</p>
+    <h1 class="font-display text-4xl sm:text-5xl uppercase">Find us</h1>
+  </div>
+
+  <div class="grid md:grid-cols-2 gap-12">
+    <div>
+      <div class="mb-8">
+        <p class="font-mono text-xs text-[var(--gold-400)] uppercase tracking-widest mb-2">Address</p>
+        <p class="text-[var(--steel-300)]">Mansfield Road, Nottingham</p>
+      </div>
+
+      <div class="mb-8">
+        <p class="font-mono text-xs text-[var(--gold-400)] uppercase tracking-widest mb-2">Hours</p>
+        <div class="text-[var(--steel-300)] space-y-1 font-mono text-sm">
+          <p>Mon – Fri: 09:00 – 18:00</p>
+          <p>Saturday: 09:00 – 17:00</p>
+          <p>Sunday: Closed</p>
+        </div>
+      </div>
+
+      <div class="mb-8">
+        <p class="font-mono text-xs text-[var(--gold-400)] uppercase tracking-widest mb-2">Contact</p>
+        <div class="text-[var(--steel-300)] space-y-1">
+          <p><a href="mailto:hairklinics@gmail.com" class="hover:text-[var(--gold-400)] transition-colors">hairklinics@gmail.com</a></p>
+          <p><a href="https://wa.me/447349570305" target="_blank" rel="noopener" class="hover:text-[var(--gold-400)] transition-colors">WhatsApp us</a></p>
+        </div>
+      </div>
+
+      <div>
+        <p class="font-mono text-xs text-[var(--gold-400)] uppercase tracking-widest mb-2">Follow</p>
+        <div class="flex flex-col gap-2">
+          <a href="https://instagram.com/hairklinics" target="_blank" rel="noopener" class="flex items-center gap-2 text-[var(--steel-300)] hover:text-[var(--gold-400)] transition-colors">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+            Instagram
+          </a>
+          <a href="https://facebook.com/hairklinics" target="_blank" rel="noopener" class="flex items-center gap-2 text-[var(--steel-300)] hover:text-[var(--gold-400)] transition-colors">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 9h2V6h-2a3 3 0 0 0-3 3v2H9v3h2v6h3v-6h2.2l.8-3H14V9z"/></svg>
+            Facebook
+          </a>
+          <a href="https://tiktok.com/@hairklinics" target="_blank" rel="noopener" class="flex items-center gap-2 text-[var(--steel-300)] hover:text-[var(--gold-400)] transition-colors">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 4c.3 2 1.8 3.4 4 3.7v2.6c-1.5 0-2.9-.4-4-1.2v6a5 5 0 1 1-5-5c.3 0 .7 0 1 .1V12a2.5 2.5 0 1 0 1.5 2.3V4h2.5z"/></svg>
+            TikTok
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="aspect-square md:aspect-auto md:h-full rounded-sm border border-[var(--charcoal-700)] overflow-hidden min-h-[300px]">
+      <iframe
+        src="https://www.google.com/maps?q=Mansfield+Road,+Nottingham&output=embed"
+        width="100%" height="100%" style="border:0; filter: grayscale(1) invert(0.9);"
+        allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade">
+      </iframe>
+    </div>
+  </div>
+</section>
+{% endblock %}
