@@ -108,7 +108,7 @@
         </div>
       
         <a id="paymentProofWhatsapp" href="#" target="_blank" rel="noopener" class="flex items-center justify-center gap-2 bg-[var(--gold-500)] text-[var(--charcoal-950)] font-semibold py-3 rounded-sm glow-hover mb-2">Send proof of payment on WhatsApp</a>
-        <a id="paymentProofEmail" href="#" class="flex items-center justify-center gap-2 border border-[var(--charcoal-600)] text-[var(--ivory)] py-3 rounded-sm hover:border-[var(--gold-500)] transition-colors">Or send by email</a>
+        <a id="paymentProofEmail" href="#" class="flex items-center justify-center gap-2 border border-[var(--charcoal-600)] text-[var(--ivory)] py-3 rounded-sm hover:border-[var(--gold-500)] transition-colors">send by email</a>
       </div>
   
       <div class="forge-line my-5"></div>
@@ -156,7 +156,7 @@
     
     let currentService = null;   // holds id, name, price, barberId, duration
     let currentDate = null;
-    let currentSlot = null;      // e.g. "10:00"
+    let currentSlot = null;      
     
     function showStep(step) {
       [stepDate, stepSlots, stepDetails, stepSuccess].forEach(s => s.classList.add('hidden'));
@@ -254,7 +254,7 @@
     
       if (res.ok) {
         const booking = await res.json();
-        const ref = `#${booking.id}`;
+        const ref = booking.reference;
         const paymentMsg = `Hi Hair Klinics, here's my proof of payment for booking ${ref} (${currentService.name}, ${currentDate} at ${currentSlot}).`;
         document.getElementById('paymentProofWhatsapp').href = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(paymentMsg)}`;
         document.getElementById('paymentProofEmail').href = `mailto:${BOOKING_EMAIL}?subject=${encodeURIComponent('Payment proof - Booking ' + ref)}&body=${encodeURIComponent(paymentMsg)}`;

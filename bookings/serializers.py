@@ -14,11 +14,11 @@ class BookingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Booking
         fields = [
-            'id', 'barber', 'service',
+            'id','reference', 'barber', 'service',
             'customer_name', 'customer_email', 'customer_phone',
             'start_time', 'end_time', 'status',
         ]
-        read_only_fields = ['end_time', 'status']
+        read_only_fields = ['end_time', 'status', 'reference']
         
     def validate(self, data):
         service = data['service']

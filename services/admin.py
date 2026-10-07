@@ -13,5 +13,6 @@ class ServiceCategoryAdmin(admin.ModelAdmin):
 class ServiceAdmin(admin.ModelAdmin):
     list_display = ('id','name', 'category', 'duration_minutes', 'price', 'is_active')
     list_filter = ('category', 'is_active')
+    list_editable = ('duration_minutes', 'price', 'is_active')
     search_fields = ('name',)
     ordering = ('category__order',)

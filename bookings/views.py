@@ -69,9 +69,10 @@ class BookingCreateView(CreateAPIView):
             message=(
                 f"Hi {booking.customer_name},\n\n"
                 f"Your booking is confirmed:\n"
+                f"Reference: {booking.reference}\n"
                 f"Service: {booking.service.name}\n"
                 f"Date & Time: {booking.start_time.strftime('%A, %d %B %Y at %H:%M')}\n\n"
-                f"Please send proof of payment via WhatsApp or email to fully secure your slot.\n\n"
+                f"Please send proof of payment by email to fully secure your slot.\n\n"
                 f"Thanks,\nHair Klinics"
             ),
             from_email=None,  

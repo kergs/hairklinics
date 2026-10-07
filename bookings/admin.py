@@ -10,10 +10,10 @@ class BarberAvailabilityAdmin(admin.ModelAdmin):
 
 @admin.register(Booking)
 class BookingAdmin(admin.ModelAdmin):
-    list_display = ('customer_name', 'barber', 'service', 'start_time', 'status', 'updated_at')
+    list_display = ('reference', 'customer_name', 'barber', 'service', 'start_time', 'status', 'updated_at')
     list_filter = ('status', 'barber')
     list_editable = ('status',)
-    search_fields = ('customer_name', 'customer_email', 'customer_phone')
+    search_fields = ('reference', 'customer_name', 'customer_email', 'customer_phone')
     ordering = ('-start_time',)
     actions = ['mark_confirmed', 'mark_cancelled', 'mark_completed']
 
