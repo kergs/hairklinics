@@ -3,7 +3,7 @@ from barbers.models import Barber
 from services.models import Service
 import random, string
 from django.core.mail import send_mail
-
+from django.utils import timezone
 
 class BarberAvailability(models.Model):
     WEEKDAY_CHOICES = [
@@ -41,6 +41,12 @@ class Booking(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     reference = models.CharField(max_length=20, unique=True, blank=True)
+
+    @property
+    def when_display(self):
+        start = timezone.localtime(self.start_time)
+        end = timezone.localtime(self.end_time)
+        return f"{start:%A, %d %B %Y}, {start:%H:%M} – {end:%H:%M}"
 
     def save(self, *args, **kwargs):
         if not self.reference:
@@ -80,7 +86,7 @@ class Booking(models.Model):
                 f"Hi {self.customer_name},\n\n"
                 f"We've confirmed your payment for booking {self.reference}.\n"
                 f"Service: {self.service.name}\n"
-                f"Date & Time: {self.start_time.strftime('%A, %d %B %Y at %H:%M')}\n\n"
+                f"When: {self.when_display}\n\n"
                 f"We'll see you then! Reply to this email if anything changes.\n\n"
                 f"Thank you,\nHair Klinics"
             ),
@@ -112,7 +118,7 @@ class Booking(models.Model):
                 f"Your booking has been cancelled:\n"
                 f"Reference: {self.reference}\n"
                 f"Service: {self.service.name}\n"
-                f"Date & Time: {self.start_time.strftime('%A, %d %B %Y at %H:%M')}\n\n"
+                f"When: {self.when_display}\n\n"
                 f"If this wasn't expected, or you'd like to rebook, please get in touch.\n\n"
                 f"Thank you,\nHair Klinics"
             ),
@@ -128,3 +134,13 @@ class Booking(models.Model):
 
     def __str__(self):
         return f"{self.customer_name} with {self.barber.name} at {self.start_time}"
+    
+class TimeBlock(models.Model):
+    start_time = models.TimeField()
+    end_time = models.TimeField()
+
+    class Meta:
+        ordering = ['start_time']
+
+    def __str__(self):
+        return f"{self.start_time:%H:%M} – {self.end_time:%H:%M}"

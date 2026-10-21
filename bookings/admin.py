@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import BarberAvailability, Booking
+from .models import BarberAvailability, Booking, TimeBlock
 
 # Register your models here.
 @admin.register(BarberAvailability)
@@ -28,3 +28,7 @@ class BookingAdmin(admin.ModelAdmin):
     @admin.action(description="Mark selected bookings as Completed")
     def mark_completed(self, request, queryset):
         queryset.update(status='completed')
+        
+@admin.register(TimeBlock)
+class TimeBlockAdmin(admin.ModelAdmin):
+    list_display = ('start_time', 'end_time')

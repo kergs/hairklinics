@@ -10,6 +10,8 @@ from rest_framework.generics import CreateAPIView
 from .serializers import BookingSerializer
 from .models import Booking
 from django.core.mail import send_mail
+from django.conf import settings
+from .scheduling import candidate_slots, blocking_bookings
 
 class AvailabilityView(APIView):
     def get(self, request):
@@ -20,44 +22,16 @@ class AvailabilityView(APIView):
         service = serializer.validated_data['service']
         date = serializer.validated_data['date']
 
-        weekday = date.weekday()  # Monday=0 ... Sunday=6
+        now = timezone.now()
+        free = []
+        for start, end in candidate_slots(barber, service, date):
+            if start <= now:
+                continue
+            if blocking_bookings(barber, start, end).exists():
+                continue
+            free.append({"start": start.strftime('%H:%M'), "end": end.strftime('%H:%M')})
 
-       # finding the barber's working window for this weekday
-        try:
-            availability = BarberAvailability.objects.get(barber=barber, weekday=weekday)
-        except BarberAvailability.DoesNotExist:
-            return Response({"slots": []})  # barber doesn't work this day
-
-        # build the full list of possible slots, spaced by service duration
-        duration = timedelta(minutes=service.duration_minutes)
-        slot_start = timezone.make_aware(datetime.combine(date, availability.start_time))
-        window_end = timezone.make_aware(datetime.combine(date, availability.end_time))
-        
-        possible_slots = []
-        while slot_start + duration <= window_end:
-            possible_slots.append(slot_start)
-            slot_start += duration
-
-        # pull existing bookings for this barber on this date
-        existing_bookings = Booking.objects.filter(
-            barber=barber,
-            start_time__date=date,
-        ).exclude(status='cancelled')
-
-        # remove any slot that overlaps an existing booking
-        free_slots = []
-        for slot in possible_slots:
-            slot_end = slot + duration
-            overlaps = any(
-                slot < b.end_time and slot_end > b.start_time
-                for b in existing_bookings
-            )
-            if not overlaps:
-                free_slots.append(slot.strftime('%H:%M'))
-
-        return Response({"slots": free_slots})
-    
-
+        return Response({"slots": free})
 class BookingCreateView(CreateAPIView):
     queryset = Booking.objects.all()
     serializer_class = BookingSerializer
@@ -65,17 +39,22 @@ class BookingCreateView(CreateAPIView):
     def perform_create(self, serializer):
         booking = serializer.save()
         send_mail(
-            subject=f"Booking Confirmation: Hair Klinics (#{booking.id})",
+            subject=f"Booking Received: Payment Needed to Secure Your Slot ({booking.reference})",
             message=(
                 f"Hi {booking.customer_name},\n\n"
-                f"Your booking is confirmed:\n"
+                f"Thanks for booking with Hair Klinics. We've received your booking request, "
+                f"but it is NOT confirmed yet.\n\n"
                 f"Reference: {booking.reference}\n"
                 f"Service: {booking.service.name}\n"
-                f"Date & Time: {booking.start_time.strftime('%A, %d %B %Y at %H:%M')}\n\n"
-                f"Please send proof of payment by email to fully secure your slot.\n\n"
+                f"When: {booking.when_display}\n\n"
+                f"IMPORTANT: this email is not proof of payment. Your slot is only held for "
+                f"{settings.BOOKING_HOLD_MINUTES} minutes. To secure and guarantee it, please pay by bank transfer "
+                f"and email your proof of payment to bookings@hairklinics.com, quoting {booking.reference}. "
+                f"If we don't receive payment in time, the slot is released and may be given to another customer.\n\n"
+                f"We'll email you again as soon as your payment is confirmed.\n\n"
                 f"Thanks,\nHair Klinics"
             ),
-            from_email=None,  
+            from_email=None,
             recipient_list=[booking.customer_email],
             fail_silently=False,
         )

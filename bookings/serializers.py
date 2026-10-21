@@ -3,6 +3,10 @@ from barbers.models import Barber
 from services.models import Service
 from .models import Booking
 from datetime import datetime, timedelta
+from django.utils import timezone
+from django.conf import settings
+from .scheduling import blocking_bookings, candidate_slots
+
 
 class AvailabilityQuerySerializer(serializers.Serializer):
     barber = serializers.PrimaryKeyRelatedField(queryset=Barber.objects.filter(is_active=True))
@@ -23,17 +27,19 @@ class BookingSerializer(serializers.ModelSerializer):
     def validate(self, data):
         service = data['service']
         barber = data['barber']
-        start_time = data['start_time']
-        end_time = start_time + timedelta(minutes=service.duration_minutes)
+        start = data['start_time']
 
-        overlapping = Booking.objects.filter(
-            barber=barber,
-            start_time__lt=end_time,
-            end_time__gt=start_time,
-        ).exclude(status='cancelled')
+        if start <= timezone.now():
+            raise serializers.ValidationError("That time has already passed. Please choose a later slot.")
 
-        if overlapping.exists():
+        local_date = timezone.localtime(start).date()
+        match = next((s for s in candidate_slots(barber, service, local_date) if s[0] == start), None)
+        if not match:
+            raise serializers.ValidationError("That time isn't available for this service. Please choose one of the listed times.")
+
+        end = match[1]
+        if blocking_bookings(barber, start, end).exists():
             raise serializers.ValidationError("This time slot is no longer available. Please choose another.")
 
-        data['end_time'] = end_time
+        data['end_time'] = end
         return data
