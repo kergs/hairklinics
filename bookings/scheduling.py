@@ -20,14 +20,18 @@ def candidate_slots(barber, service, date):
     if not windows:
         return []
 
+    duration = timedelta(minutes=service.duration_minutes)
     slots = []
     if service.category.booking_mode == ServiceCategory.MODE_BLOCKS:
-        for block in TimeBlock.objects.all():
-            start, end = _aware(date, block.start_time), _aware(date, block.end_time)
+        block_times = [(_aware(date, b.start_time), _aware(date, b.end_time)) for b in TimeBlock.objects.all()]
+        longest = max((e - s for s, e in block_times), default=timedelta())
+        needed = min(duration, longest)  # services longer than every block use the longest blocks
+        for start, end in block_times:
+            if end - start < needed:
+                continue
             if any(start >= ws and end <= we for ws, we in windows):
                 slots.append((start, end))
     else:
-        duration = timedelta(minutes=service.duration_minutes)
         for ws, we in windows:
             start = ws
             while start + duration <= we:

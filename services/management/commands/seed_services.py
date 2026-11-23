@@ -2,71 +2,71 @@ from django.core.management.base import BaseCommand
 from django.utils.text import slugify
 from services.models import ServiceCategory, Service
 
-# (service_name, price, price_note, duration_minutes)
-# Durations are rough estimates. The client corrects them in the admin.
+# (category_name, default_duration_minutes, [(service_name, price, price_note[, duration_override]), ...])
+# Durations come from the client. The client can still edit them in the admin.
 DATA = [
-    ("Wash", [
-        ("Kids & Teens", 10, "", 30),
-        ("Wash, Conditioning & Blow Dry (Adult)", 25, "", 60),
-        ("Wash Locs (Adult)", 15, "", 45),
-        ("Wash, Conditioning & Blow Dry (Kids & Teens)", 20, "", 45),
+    ("Wash", 15, [
+        ("Kids & Teens", 10, ""),
+        ("Wash, Conditioning & Blow Dry (Adult)", 25, ""),
+        ("Wash Locs (Adult)", 15, ""),
+        ("Wash, Conditioning & Blow Dry (Kids & Teens)", 20, ""),
     ]),
-    ("Haircut", [
-        ("Shape Up (Kids)", 5, "", 15),
-        ("Shape Up (Teens 11-17)", 5, "", 15),
-        ("Shape Up (Adult)", 10, "", 20),
-        ("Haircut (Adult Men)", 20, "", 30),
-        ("Haircut (Ladies)", 15, "", 45),
+    ("Haircut", 30, [
+        ("Shape Up (Kids)", 5, ""),
+        ("Shape Up (Teens 11-17)", 5, ""),
+        ("Shape Up (Adult)", 10, ""),
+        ("Haircut (Adult Men)", 20, ""),
+        ("Haircut (Ladies)", 15, ""),
     ]),
-    ("Locs - Adult", [
-        ("Styling", 15, "", 45),
-        ("Interlock/Retwist (Half Head)", 45, "", 90),
-        ("Interlock/Retwist (Full Head)", 55, "", 120),
-        ("Retwist/Interlock + Styling (Half Head)", 55, "", 120),
-        ("Retwist/Interlock + Styling (Full Head)", 65, "", 150),
-        ("Starter Locs (Half Head)", 50, "", 150),
-        ("Starter Locs (Full Head)", 60, "", 180),
-        ("Locs Extensions / Extensive Locs Repairs", 20, "£20 (1st hr), £10/hr after - est. 2hrs", 120),
-        ("Starter Microlocs", 20, "£20 (1st hr), £10/hr after", 240),
-        ("Microlocs Retie (2.5 hrs)", 50, "", 150),
+    ("Locs - Adult", 150, [
+        ("Styling", 15, ""),
+        ("Interlock/Retwist (Half Head)", 45, ""),
+        ("Interlock/Retwist (Full Head)", 55, ""),
+        ("Retwist/Interlock + Styling (Half Head)", 55, ""),
+        ("Retwist/Interlock + Styling (Full Head)", 65, ""),
+        ("Starter Locs (Half Head)", 50, ""),
+        ("Starter Locs (Full Head)", 60, ""),
+        ("Locs Extensions / Extensive Locs Repairs", 20, "£20 (1st hr), £10/hr after - est. 2hrs"),
+        ("Starter Microlocs", 20, "£20 (1st hr), £10/hr after"),
+        ("Microlocs Retie (2.5 hrs)", 50, ""),
         ("Microlocs Retie (3.5 hrs)", 65, "", 210),
         ("Microlocs Retie (4 hrs)", 80, "", 240),
     ]),
-    ("Locs - Teens (13-17)", [
-        ("Styling", 10, "", 30),
-        ("Interlock/Retwist (Half Head)", 40, "", 75),
-        ("Interlock/Retwist (Full Head)", 50, "", 105),
-        ("Retwist/Interlock + Styling (Half Head)", 50, "", 105),
-        ("Retwist/Interlock + Styling (Full Head)", 60, "", 135),
-        ("Starter Locs (Half Head)", 45, "", 120),
-        ("Starter Locs (Full Head)", 55, "", 150),
+    ("Locs - Teens (13-17)", 120, [
+        ("Styling", 10, ""),
+        ("Interlock/Retwist (Half Head)", 40, ""),
+        ("Interlock/Retwist (Full Head)", 50, ""),
+        ("Retwist/Interlock + Styling (Half Head)", 50, ""),
+        ("Retwist/Interlock + Styling (Full Head)", 60, ""),
+        ("Starter Locs (Half Head)", 45, ""),
+        ("Starter Locs (Full Head)", 55, ""),
     ]),
-    ("Locs - Kids", [
-        ("Styling", 10, "", 30),
-        ("Interlock/Retwist (Half Head)", 35, "", 60),
-        ("Interlock/Retwist (Full Head)", 40, "", 90),
-        ("Retwist/Interlock + Styling (Half Head)", 45, "", 90),
-        ("Retwist/Interlock + Styling (Full Head)", 45, "", 105),
-        ("Starter Locs (Half Head)", 35, "", 90),
-        ("Starter Locs (Full Head)", 45, "", 120),
+    ("Locs - Kids", 120, [
+        ("Styling", 10, ""),
+        ("Interlock/Retwist (Half Head)", 35, ""),
+        ("Interlock/Retwist (Full Head)", 40, ""),
+        ("Retwist/Interlock + Styling (Half Head)", 45, ""),
+        ("Retwist/Interlock + Styling (Full Head)", 45, ""),
+        ("Starter Locs (Half Head)", 35, ""),
+        ("Starter Locs (Full Head)", 45, ""),
     ]),
-    ("Professional Removals", [
-        ("Cornrow Removal", 30, "", 60),
-        ("Faux Locs Removal", 20, "", 90),
-        ("Combing Out of Locs", 20, "£20/hr", 60),
+    ("Professional Removals", 120, [
+        ("Cornrow Removal", 30, ""),
+        ("Faux Locs Removal", 20, ""),
+        ("Combing Out of Locs", 20, "£20/hr"),
     ]),
-    ("Kinky Twists", [
-        ("Kinky Twists", 60, "", 240),
+    ("Kinky Twists", 150, [
+        ("Kinky Twists", 60, ""),
     ]),
-    ("Cornrows", [
-        ("Basic (Half Head)", 30, "", 60),
-        ("Basic (Full Head)", 40, "", 90),
-        ("Stitch Pattern (Half Head)", 50, "", 90),
-        ("Stitch Pattern (Full Head)", 60, "", 120),
+    ("Cornrows", 120, [
+        ("Basic (Half Head)", 30, ""),
+        ("Basic (Full Head)", 40, ""),
+        ("Stitch Pattern (Half Head)", 50, ""),
+        ("Stitch Pattern (Full Head)", 60, ""),
     ]),
-    ("Consultations", [
-        ("In-Person", 15, "", 30),
-        ("Video Consultation", 10, "", 20),
+    ("Consultations", 30, [
+        ("In-Person", 15, ""),
+        ("Video Consultation", 10, ""),
     ]),
 ]
 
@@ -84,13 +84,16 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         update_durations = options['update_durations']
 
-        for order, (category_name, services) in enumerate(DATA):
+        for order, (category_name, default_minutes, services) in enumerate(DATA):
             category, _ = ServiceCategory.objects.get_or_create(
                 slug=slugify(category_name),
                 defaults={"name": category_name, "order": order},
             )
 
-            for name, price, note, minutes in services:
+            for item in services:
+                name, price, note = item[0], item[1], item[2]
+                minutes = item[3] if len(item) > 3 else default_minutes
+
                 service, created = Service.objects.get_or_create(
                     category=category,
                     name=name,
@@ -101,6 +104,6 @@ class Command(BaseCommand):
                 elif update_durations and service.duration_minutes != minutes:
                     service.duration_minutes = minutes
                     service.save(update_fields=['duration_minutes'])
-                    self.stdout.write(f"Updated duration: {name} -> {minutes} min")
+                    self.stdout.write(f"Updated duration: {category_name} / {name} -> {minutes} min")
 
         self.stdout.write(self.style.SUCCESS("Done seeding services."))

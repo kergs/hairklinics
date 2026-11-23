@@ -52,7 +52,7 @@
             </div>
             <span class="text-right whitespace-nowrap">
               <span class="block font-mono text-[var(--gold-300)]">£{{ s.price }}</span>
-              <span class="block text-xs text-[var(--steel-300)] mt-1">{% if c.booking_mode == 'blocks' %}{{ block_label }}{% else %}{{ s.duration_display }}{% endif %}</span>
+              <span class="block text-xs text-[var(--steel-300)] mt-1">{{ s.duration_display }}</span>
             </span>
           </a>
         {% endfor %}
