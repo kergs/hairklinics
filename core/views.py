@@ -1,13 +1,11 @@
 from datetime import date, datetime
-
 from django.conf import settings
 from django.db.models import Prefetch
 from django.shortcuts import render
-
 from barbers.models import Barber
 from bookings.models import TimeBlock
 from services.models import ServiceCategory, Service
-from .models import GalleryImage
+from .models import GalleryImage, HeroSlide, SiteSettings
 
 
 def _active_categories():
@@ -38,7 +36,8 @@ def _block_label():
 
 
 def home(request):
-    return render(request, 'home.html')
+    slides = HeroSlide.objects.filter(is_active=True)
+    return render(request, 'home.html', {'slides': slides})
 
 
 def services(request):
@@ -55,6 +54,7 @@ def book(request):
         'selected_service_id': request.GET.get('service', ''),
         'hold_minutes': settings.BOOKING_HOLD_MINUTES,
         'block_label': _block_label(),
+        'site': SiteSettings.load(),
     })
 
 

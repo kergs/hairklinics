@@ -4,6 +4,8 @@ from services.models import Service
 import random, string
 from django.core.mail import send_mail
 from django.utils import timezone
+from django.core.exceptions import ValidationError
+from emailing import send_email_async
 
 class BarberAvailability(models.Model):
     WEEKDAY_CHOICES = [
@@ -28,8 +30,9 @@ class Booking(models.Model):
         ('confirmed', 'Confirmed'),
         ('cancelled', 'Cancelled'),
         ('completed', 'Completed'),
+        ('expired', 'expired'),
     ]
-
+    payment_claimed_at = models.DateTimeField(null=True, blank=True)
     barber = models.ForeignKey(Barber, on_delete=models.CASCADE, related_name='bookings')
     service = models.ForeignKey(Service, on_delete=models.CASCADE, related_name='bookings')
     customer_name = models.CharField(max_length=100)
@@ -72,6 +75,24 @@ class Booking(models.Model):
            self._send_completed_email()
         if status_changed_to_cancelled:
            self._send_cancelled_email()
+           
+    def clean(self):
+        if self.status != 'confirmed':
+            return
+        if not (self.barber_id and self.start_time and self.end_time):
+            return
+
+        clash = Booking.objects.filter(
+            barber=self.barber,
+            start_time__lt=self.end_time,
+            end_time__gt=self.start_time,
+            status__in=['confirmed', 'completed'],
+        ).exclude(pk=self.pk).first()
+
+        if clash:
+            raise ValidationError(
+                f"This time overlaps booking {clash.reference} ({clash.customer_name}). Resolve that first."
+            )
            
     def _generate_reference(self):
         while True:
@@ -127,9 +148,7 @@ class Booking(models.Model):
         fail_silently=True,
     )
     class Meta:
-        constraints = [
-            models.UniqueConstraint(fields=['barber', 'start_time'], name='no_double_booking')
-        ]
+        
         ordering = ['start_time']
 
     def __str__(self):

@@ -78,9 +78,11 @@ a:focus-visible, button:focus-visible{outline:2px solid var(--gold-300); outline
       </div>
     </div>
     <div class="reveal aspect-[4/5] rounded-sm border border-[var(--charcoal-700)] relative overflow-hidden">
-      <div class="slide active"><img src="{% static 'images/hero/slide-1-skin-fade.jpg' %}" alt="Skin fade haircut" class="w-full h-full object-cover"></div>
-      <div class="slide"><img src="{% static 'images/hero/slide-2-beard-sculpt.jpg' %}" alt="Beard sculpting service" class="w-full h-full object-cover"></div>
-      <div class="slide"><img src="{% static 'images/hero/slide-3-hot-towel.jpg' %}" alt="Hot towel shave service" class="w-full h-full object-cover"></div>
+      {% for s in slides %}
+  <div class="slide{% if forloop.first %} active{% endif %}"><img src="{{ s.image.url }}" alt="{{ s.alt_text|default:'Hair Klinics' }}" class="w-full h-full object-cover"></div>
+      {% empty %}
+  <div class="slide active flex items-center justify-center bg-[var(--charcoal-900)]"><span class="font-display text-2xl uppercase text-[var(--steel-400)]">Hair <span class="text-[var(--gold-400)]">Klinics</span></span></div>
+      {% endfor %}
       <div id="slideDots" class="absolute bottom-4 inset-x-0 flex justify-center gap-2"></div>
     </div>
   </div>

@@ -132,7 +132,6 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 
-
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.zoho.com'
 EMAIL_PORT = 587
@@ -142,3 +141,14 @@ EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = 'HairKlinics <bookings@hairklinics.com>'
 
 BOOKING_HOLD_MINUTES = 30
+BOOKING_CLAIMED_HOLD_HOURS = 12
+BOOKING_EXPIRED_RETENTION_DAYS = 30
+BOOKING_NOTIFY_EMAIL = 'bookings@hairklinics.com'
+
+REST_FRAMEWORK = {
+    'DEFAULT_THROTTLE_RATES': {
+        'booking': '10/hour',
+        'payment_claim': '20/hour',
+        },
+    
+}
