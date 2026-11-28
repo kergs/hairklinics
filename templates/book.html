@@ -24,7 +24,7 @@ details[open] .chev{transform:rotate(90deg);}
 
 {% block content %}
 {% csrf_token %}
-<section id="bookApp" class="px-5 sm:px-8 py-16 max-w-6xl mx-auto" data-preselected="{{ selected_service_id }}">
+<section id="bookApp" class="px-5 sm:px-8 py-16 max-w-6xl mx-auto" data-preselected="{{ selected_service_id }}" data-deposit="{% if site.has_deposit %}{{ site.deposit_amount }}{% else %}0{% endif %}">
 
   <div class="mb-8">
     <p class="font-mono text-xs tracking-[0.25em] text-[var(--gold-400)] uppercase mb-3">Book a chair</p>
@@ -113,6 +113,13 @@ details[open] .chev{transform:rotate(90deg);}
           <input type="text" id="custName" placeholder="Full name" autocomplete="name" class="field">
           <input type="email" id="custEmail" placeholder="Email" autocomplete="email" class="field">
           <input type="tel" id="custPhone" placeholder="Phone number" autocomplete="tel" class="field">
+          {% if site.has_deposit %}
+          <div class="border border-[var(--gold-500)] rounded-sm p-3 text-sm">
+            <p class="font-display uppercase text-[var(--gold-300)]">Deposit due once you book: £{{ site.deposit_amount }}</p>
+            <p id="depositExplain" class="text-[var(--steel-300)] mt-1"></p>
+            <p class="text-[var(--steel-300)] mt-1">Your slot is held for {{ hold_minutes }} minutes while you pay.</p>
+          </div>
+          {% endif %}
           <button type="button" id="confirmBtn" class="w-full bg-[var(--gold-500)] text-[var(--charcoal-950)] font-semibold py-3 rounded-sm glow-hover">Confirm booking</button>
           <p id="bookingError" class="text-sm text-red-400 hidden"></p>
         </div>
@@ -134,8 +141,17 @@ details[open] .chev{transform:rotate(90deg);}
 
         <div class="border border-[var(--gold-500)] rounded-sm p-4 mb-6 max-w-md">
           <p class="font-display uppercase text-[var(--gold-300)] mb-1">Not confirmed yet</p>
-          <p class="text-sm text-[var(--steel-300)]">This reference is not proof of payment. Your slot is only guaranteed once we receive and confirm your payment. We're holding it for {{ hold_minutes }} minutes, then it's released to other customers.</p>
+          <p class="text-sm text-[var(--steel-300)]">{% if site.has_deposit %}To keep your slot, pay the deposit below. {% endif %}Your slot is only guaranteed once we receive and confirm your payment. We're holding it for {{ hold_minutes }} minutes, then it's released to other customers.</p>
         </div>
+
+        {% if site.has_deposit %}
+        <div class="max-w-md mb-6">
+          <p class="font-mono text-xs text-[var(--gold-400)] uppercase tracking-widest mb-1">Deposit due now</p>
+          <p class="font-display text-4xl text-[var(--gold-300)]">£{{ site.deposit_amount }}</p>
+          <p id="doneDepositExplain" class="text-sm text-[var(--steel-300)] mt-1"></p>
+          {% if site.deposit_terms %}<p class="text-sm text-[var(--steel-300)] mt-1">{{ site.deposit_terms }}</p>{% endif %}
+        </div>
+        {% endif %}
 
         <p class="font-mono text-xs text-[var(--gold-400)] uppercase tracking-widest mb-2">Pay by transfer</p>
         {% if site.has_bank_details %}
@@ -144,6 +160,7 @@ details[open] .chev{transform:rotate(90deg);}
           <p><span class="text-[var(--steel-400)]">Account name:</span> {{ site.account_name }}</p>
           <p><span class="text-[var(--steel-400)]">Sort code:</span> <span class="font-mono">{{ site.sort_code }}</span></p>
           <p><span class="text-[var(--steel-400)]">Account number:</span> <span class="font-mono">{{ site.account_number }}</span></p>
+          {% if site.has_deposit %}<p><span class="text-[var(--steel-400)]">Amount:</span> <span class="font-mono">£{{ site.deposit_amount }}</span></p>{% endif %}
           <p><span class="text-[var(--steel-400)]">Reference:</span> <span id="doneRef2" class="font-mono"></span></p>
         </div>
         {% else %}
@@ -157,6 +174,7 @@ details[open] .chev{transform:rotate(90deg);}
         </div>
         <p id="paidDone" class="hidden text-sm text-[var(--gold-300)] mb-4 max-w-md">Thanks. We'll email you once your payment is confirmed.</p>
         <p id="paidLost" class="hidden text-sm text-red-400 mb-4 max-w-md">Your slot was released before we heard from you. We'll contact you shortly.</p>
+
         <a href="{% url 'book' %}" class="inline-block mt-4 text-sm text-[var(--gold-400)] hover:text-[var(--gold-300)]">Make another booking</a>
       </div>
 
@@ -186,10 +204,23 @@ details[open] .chev{transform:rotate(90deg);}
           <span class="text-[var(--steel-400)]">Price</span>
           <span id="sumPrice" class="font-mono text-[var(--gold-300)]">—</span>
         </div>
+
+        {% if site.has_deposit %}
+        <div class="flex justify-between gap-4">
+          <span class="text-[var(--steel-400)]">Deposit due now</span>
+          <span id="sumDeposit" class="font-mono text-[var(--gold-300)]">—</span>
+        </div>
+        <div class="flex justify-between gap-4">
+          <span class="text-[var(--steel-400)]">Balance on the day</span>
+          <span id="sumBalance" class="font-mono">—</span>
+        </div>
+        {% endif %}
+
       </div>
+
       <button type="button" id="changeBarber" class="text-xs text-[var(--steel-400)] hover:text-[var(--gold-400)] mt-2 hidden">Change stylist</button>
 
-      <p class="text-xs text-[var(--steel-300)] mt-4">Your booking is only guaranteed once payment is confirmed. After booking, we hold your slot for {{ hold_minutes }} minutes.</p>
+      <p class="text-xs text-[var(--steel-300)] mt-4">{% if site.has_deposit %}A £{{ site.deposit_amount }} deposit secures your slot. {% if site.deposit_terms %}{{ site.deposit_terms }} {% endif %}{% endif %}Your booking is only guaranteed once payment is confirmed. After booking, we hold your slot for {{ hold_minutes }} minutes.</p>
 
       <div class="forge-line my-4"></div>
       <p class="font-mono text-xs text-[var(--steel-400)] uppercase tracking-widest mb-2">Prefer to book directly?</p>
@@ -212,6 +243,7 @@ details[open] .chev{transform:rotate(90deg);}
   const steps = { service: $('stepService'), barber: $('stepBarber'), time: $('stepTime'), details: $('stepDetails'), done: $('stepDone') };
   const serviceOptions = document.querySelectorAll('.service-option');
   const barberOptions = document.querySelectorAll('.barber-option');
+  const DEPOSIT = parseFloat(app.dataset.deposit) || 0;
   const state = { service: null, barber: null, date: '', slot: '', slotEnd: '' };
   let ready = false;
   let lastRequest = 0;
@@ -230,6 +262,16 @@ details[open] .chev{transform:rotate(90deg);}
   function whenText() {
     if (state.date && state.slot) return `${prettyDate(state.date)}, ${state.slot} – ${state.slotEnd}`;
     return state.date ? prettyDate(state.date) : '—';
+  }
+
+  function depositExplain() {
+    if (!state.service || DEPOSIT <= 0) return '';
+    const price = Number(state.service.price);
+    if (state.service.note) {
+      return `${formatPrice(DEPOSIT)} is paid now as a deposit and comes off your final price.`;
+    }
+    const balance = Math.max(0, price - DEPOSIT);
+    return `${formatPrice(DEPOSIT)} of your ${formatPrice(price)} price is paid now as a deposit and comes off the total, leaving ${formatPrice(balance)} to pay on the day.`;
   }
 
   function goTo(name) {
@@ -251,6 +293,14 @@ details[open] .chev{transform:rotate(90deg);}
     $('sumBarber').textContent = state.barber ? state.barber.name : '—';
     $('changeBarber').classList.toggle('hidden', !(state.barber && barberOptions.length > 1));
     $('sumWhen').textContent = whenText();
+
+    if (DEPOSIT > 0) {
+      const price = s ? Number(s.price) : 0;
+      if ($('sumDeposit')) $('sumDeposit').textContent = s ? formatPrice(DEPOSIT) : '—';
+      if ($('sumBalance')) $('sumBalance').textContent = (s && !s.note) ? formatPrice(Math.max(0, price - DEPOSIT)) : '—';
+      if ($('depositExplain')) $('depositExplain').textContent = depositExplain();
+    }
+
 
     const msg = s
       ? `Hi Hair Klinics, I'd like to book: ${s.category} - ${s.name} (${formatPrice(s.price)}).`
@@ -366,6 +416,8 @@ details[open] .chev{transform:rotate(90deg);}
       if (res.ok) {
         $('doneRef').textContent = data.reference;
         state.ref = data.reference;
+        const dx = $('doneDepositExplain');
+        if (dx) dx.textContent = depositExplain();
         state.email = email;
         $('paidArea').classList.remove('hidden');
         $('paidDone').classList.add('hidden');

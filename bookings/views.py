@@ -1,3 +1,5 @@
+from django.contrib.admin import site
+from django.db.migrations import serializer
 from django.shortcuts import render
 from datetime import datetime, timedelta
 from rest_framework.views import APIView
@@ -15,7 +17,11 @@ from .scheduling import candidate_slots, blocking_bookings, run_cleanup
 from rest_framework.throttling import ScopedRateThrottle
 import logging
 from core.models import SiteSettings
-from emailing import send_email_async
+from .emailing import send_email_async
+from django.db import transaction
+from rest_framework.exceptions import ValidationError as DRFValidationError
+from barbers.models import Barber
+from decimal import Decimal
 
 logger = logging.getLogger(__name__)
 class AvailabilityView(APIView):
@@ -45,37 +51,73 @@ class BookingCreateView(CreateAPIView):
     serializer_class = BookingSerializer
 
     def perform_create(self, serializer):
-        booking = serializer.save()
+        data = serializer.validated_data
+        with transaction.atomic():
+            # Lock this barber's row so two requests can't book the same slot at once.
+            Barber.objects.select_for_update().get(pk=data['barber'].pk)
+            if blocking_bookings(data['barber'], data['start_time'], data['end_time']).exists():
+                raise DRFValidationError(
+                    {'non_field_errors': ["This time slot is no longer available. Please choose another."]}
+                )
+            booking = serializer.save()
+
         site = SiteSettings.load()
+        service = booking.service
+
+        money = ""
+        terms = ""
+        if site.has_deposit:
+            subject = f"Booking Received: Deposit Needed to Secure Your Slot ({booking.reference})"
+            pay_what = "the deposit"
+            if service.price_note:
+                money = f"Deposit due now: £{site.deposit_amount} (this comes off your final price)\n\n"
+            else:
+                balance = max(service.price - site.deposit_amount, Decimal('0'))
+                money = (
+                    f"Price: £{service.price}\n"
+                    f"Deposit due now: £{site.deposit_amount} (this comes off the price)\n"
+                    f"Balance to pay on the day: £{balance}\n\n"
+                )
+            if site.deposit_terms:
+                terms = f"{site.deposit_terms}\n\n"
+        else:
+            subject = f"Booking Received: Payment Needed to Secure Your Slot ({booking.reference})"
+            pay_what = "your payment"
 
         payment_block = ""
         if site.has_bank_details:
-            payment_block = (
-                "Pay by bank transfer to:\n"
-                f"  Bank: {site.bank_name}\n"
-                f"  Account name: {site.account_name}\n"
-                f"  Sort code: {site.sort_code}\n"
-                f"  Account number: {site.account_number}\n"
-                f"  Payment reference: {booking.reference}\n\n"
-            )
+            lines = [
+                "Pay by bank transfer to:",
+                f"  Bank: {site.bank_name}",
+                f"  Account name: {site.account_name}",
+                f"  Sort code: {site.sort_code}",
+                f"  Account number: {site.account_number}",
+            ]
+            if site.has_deposit:
+                lines.append(f"  Amount: £{site.deposit_amount}")
+            lines.append(f"  Payment reference: {booking.reference}")
+            payment_block = "\n".join(lines) + "\n\n"
+
         policy_block = f"Cancellation policy:\n{site.cancellation_policy}\n\n" if site.cancellation_policy else ""
 
         try:
-            send_mail(
-                subject=f"Booking Received: Payment Needed to Secure Your Slot ({booking.reference})",
+            send_email_async(
+                subject=subject,
                 message=(
                     f"Hi {booking.customer_name},\n\n"
                     f"Thanks for booking with Hair Klinics. We've received your booking request, "
                     f"but it is NOT confirmed yet.\n\n"
                     f"Reference: {booking.reference}\n"
-                    f"Service: {booking.service.name}\n"
+                    f"Service: {service.name}\n"
                     f"When: {booking.when_display}\n\n"
+                    f"{money}"
                     f"IMPORTANT: this email is not proof of payment. Your slot is only held for "
-                    f"{settings.BOOKING_HOLD_MINUTES} minutes. To secure and guarantee it, please pay by bank "
-                    f"transfer and email your proof of payment to bookings@hairklinics.com, quoting "
+                    f"{settings.BOOKING_HOLD_MINUTES} minutes. To secure and guarantee it, please pay {pay_what} "
+                    f"by bank transfer and reply to this email with your proof of payment, quoting "
                     f"{booking.reference}. If we don't receive payment in time, the slot is released and may "
                     f"be given to another customer.\n\n"
                     f"{payment_block}"
+                    f"{terms}"
                     f"{policy_block}"
                     f"We'll email you again as soon as your payment is confirmed.\n\n"
                     f"Thanks,\nHair Klinics"
@@ -86,9 +128,8 @@ class BookingCreateView(CreateAPIView):
             )
         except Exception:
             logger.exception("Booking email failed for %s", booking.reference)
-            
-
 class PaymentClaimView(APIView):
+   
     throttle_classes = [ScopedRateThrottle]
     throttle_scope = 'payment_claim'
 
@@ -116,7 +157,10 @@ class PaymentClaimView(APIView):
         return Response({'ok': True})
 
     def _notify(self, request, booking, slot_lost):
+        site = SiteSettings.load()
+        deposit_line = f"Deposit due: £{site.deposit_amount}\n" if site.has_deposit else ""
         admin_link = request.build_absolute_uri(f"/admin/bookings/booking/?q={booking.reference}")
+        
         if slot_lost:
             subject = f"Payment claimed but slot was released: {booking.reference}"
             note = ("Their hold ran out and the slot has since been booked by someone else. "
@@ -136,7 +180,8 @@ class PaymentClaimView(APIView):
                     f"Service: {booking.service.name}\n"
                     f"When: {booking.when_display}\n"
                     f"Phone: {booking.customer_phone}\n"
-                    f"Email: {booking.customer_email}\n\n"
+                    f"Email: {booking.customer_email}\n"
+                    f"{deposit_line}\n"
                     f"{note}\n\n"
                     f"Open in admin: {admin_link}\n"
                 ),

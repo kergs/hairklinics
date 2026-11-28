@@ -71,7 +71,15 @@ class SiteSettings(models.Model):
         blank=True,
         help_text="Shown on the booking page and in the booking email. A blank line starts a new paragraph.",
     )
-
+    deposit_amount = models.DecimalField(
+        max_digits=6, decimal_places=2, default=10,
+        help_text="Deposit customers pay to secure a booking, in pounds. Set to 0 to turn it off.",
+    )
+    deposit_terms = models.CharField(
+        max_length=250, blank=True,
+        help_text="Optional. Shown next to the deposit, e.g. 'Deducted from your total on the day.'",
+    )
+    
     class Meta:
         verbose_name = "Site settings"
         verbose_name_plural = "Site settings"
@@ -91,3 +99,7 @@ class SiteSettings(models.Model):
     @property
     def has_bank_details(self):
         return all([self.bank_name, self.account_name, self.sort_code, self.account_number])
+    
+    @property
+    def has_deposit(self):
+        return self.deposit_amount > 0

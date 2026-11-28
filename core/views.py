@@ -6,7 +6,7 @@ from barbers.models import Barber
 from bookings.models import TimeBlock
 from services.models import ServiceCategory, Service
 from .models import GalleryImage, HeroSlide, SiteSettings
-
+from django.http import HttpResponse
 
 def _active_categories():
     return ServiceCategory.objects.prefetch_related(
@@ -36,8 +36,10 @@ def _block_label():
 
 
 def home(request):
-    slides = HeroSlide.objects.filter(is_active=True)
-    return render(request, 'home.html', {'slides': slides})
+    return render(request, 'home.html', {
+        'slides': HeroSlide.objects.filter(is_active=True),
+        'categories': ServiceCategory.objects.filter(services__is_active=True).distinct(),
+    })
 
 
 def services(request):
@@ -65,3 +67,7 @@ def gallery(request):
 
 def contact(request):
     return render(request, 'contact.html')
+
+def healthz(request):
+    """Used by the keep-awake ping. Deliberately touches nothing else."""
+    return HttpResponse('ok', content_type='text/plain')

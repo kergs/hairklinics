@@ -5,7 +5,7 @@ import random, string
 from django.core.mail import send_mail
 from django.utils import timezone
 from django.core.exceptions import ValidationError
-from emailing import send_email_async
+from .emailing import send_email_async
 
 class BarberAvailability(models.Model):
     WEEKDAY_CHOICES = [
@@ -101,15 +101,29 @@ class Booking(models.Model):
                 return code
 
     def _send_payment_confirmed_email(self):
-        send_mail(
+        from decimal import Decimal
+        from core.models import SiteSettings
+
+        site = SiteSettings.load()
+        intro = "We've received your payment and your booking is now confirmed."
+        if site.has_deposit:
+            intro = f"We've received your £{site.deposit_amount} deposit and your booking is now confirmed."
+            if self.service.price_note:
+                intro += " The deposit comes off your final price."
+            else:
+                balance = max(self.service.price - site.deposit_amount, Decimal('0'))
+                intro += f" The deposit comes off the price, leaving £{balance} to pay on the day."
+
+        send_email_async(
             subject=f"Payment Confirmed - Hair Klinics ({self.reference})",
             message=(
                 f"Hi {self.customer_name},\n\n"
-                f"We've confirmed your payment for booking {self.reference}.\n"
+                f"{intro}\n\n"
+                f"Reference: {self.reference}\n"
                 f"Service: {self.service.name}\n"
                 f"When: {self.when_display}\n\n"
                 f"We'll see you then! Reply to this email if anything changes.\n\n"
-                f"Thank you,\nHair Klinics"
+                f"Thanks,\nHair Klinics"
             ),
             from_email=None,
             recipient_list=[self.customer_email],

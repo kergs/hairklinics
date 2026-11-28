@@ -1,0 +1,11 @@
+Django>=6.0,<6.1
+djangorestframework>=3.16
+python-decouple>=3.8
+Pillow>=11.0
+gunicorn>=23.0
+whitenoise>=6.9
+dj-database-url>=3.0
+psycopg[binary]>=3.2
+cloudinary>=1.44
+django-cloudinary-storage>=0.3.0
+django-anymail[resend]>=14.0
